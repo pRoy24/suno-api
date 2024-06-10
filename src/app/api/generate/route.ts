@@ -2,14 +2,26 @@ import { NextResponse, NextRequest } from "next/server";
 import { DEFAULT_MODEL, sunoApi } from "@/lib/SunoApi";
 import { corsHeaders } from "@/lib/utils";
 
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   if (req.method === 'POST') {
     try {
       const body = await req.json();
-      const { prompt, make_instrumental, model, wait_audio } = body;
+      const { prompt, make_instrumental, model, wait_audio, secret } = body;
 
+
+      if (ADMIN_SECRET && secret !== ADMIN_SECRET) {
+        return new NextResponse(JSON.stringify({ error: 'Invalid secret' }), {
+          status: 403,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          }
+        });
+      }
       if (!prompt) {
         return new NextResponse(JSON.stringify({ error: 'Prompt is required' }), {
           status: 400,
